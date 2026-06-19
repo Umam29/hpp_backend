@@ -1,0 +1,187 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model InventoryLog {
+  id                              String       @id
+  rawMaterialId                   String?
+  type                            String
+  quantity                        Float
+  price                           Float?
+  referenceId                     String?
+  createdAt                       DateTime     @default(now())
+  createdBy                       String?
+  updatedAt                       DateTime
+  updatedBy                       String?
+  userInventoryLogcreatedByTouser User?        @relation("inventory_log_createdByTouser", fields: [createdBy], references: [id])
+  rawMaterial                     RawMaterial? @relation(fields: [rawMaterialId], references: [id])
+  userInventoryLogupdatedByTouser User?        @relation("inventory_log_updatedByTouser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy], map: "inventory_log_createdBy_fkey")
+  @@index([rawMaterialId], map: "inventory_log_rawMaterialId_fkey")
+  @@index([updatedBy], map: "inventory_log_updatedBy_fkey")
+  @@map("inventory_log")
+}
+
+model Product {
+  id                         String              @id
+  productCategory            String
+  name                       String
+  image                      String?
+  stock                      Int                 @default(0)
+  marginPercent              Float?
+  fixedMargin                Float?
+  sellingPrice               Float?
+  costPrice                  Float?
+  createdAt                  DateTime            @default(now())
+  createdBy                  String?
+  updatedAt                  DateTime
+  updatedBy                  String?
+  userProductCreatedByTouser User?               @relation("product_createdByTouser", fields: [createdBy], references: [id])
+  userProductUpdatedByTouser User?               @relation("product_updatedByTouser", fields: [updatedBy], references: [id])
+  productIngredients         ProductIngredient[]
+  transactionItems           TransactionItem[]
+  productPriceLogs           ProductPriceLog[]
+
+  @@index([createdBy], map: "product_createdBy_fkey")
+  @@index([updatedBy], map: "product_updatedBy_fkey")
+  @@map("product")
+}
+
+model ProductPriceLog {
+  id           String   @id
+  productId    String
+  costPrice    Float
+  sellingPrice Float
+  reason       String
+  referenceId  String?
+  createdAt    DateTime @default(now())
+  createdBy    String?
+  updatedAt    DateTime
+  updatedBy    String?
+  product      Product  @relation(fields: [productId], references: [id])
+  userProductPriceLogCreatedByTouser User? @relation("product_price_log_createdByTouser", fields: [createdBy], references: [id])
+  userProductPriceLogUpdatedByTouser User? @relation("product_price_log_updatedByTouser", fields: [updatedBy], references: [id])
+
+  @@index([productId], map: "product_price_log_productId_fkey")
+  @@index([createdBy], map: "product_price_log_createdBy_fkey")
+  @@index([updatedBy], map: "product_price_log_updatedBy_fkey")
+  @@map("product_price_log")
+}
+
+model ProductIngredient {
+  id                                   String      @id
+  productId                            String
+  rawMaterialId                        String
+  quantity                             Float
+  createdAt                            DateTime    @default(now())
+  createdBy                            String?
+  updatedAt                            DateTime
+  updatedBy                            String?
+  userProductIngredientcreatedByTouser User?       @relation("product_ingredient_createdByTouser", fields: [createdBy], references: [id])
+  product                              Product     @relation(fields: [productId], references: [id])
+  rawMaterial                          RawMaterial @relation(fields: [rawMaterialId], references: [id])
+  userProductIngredientupdatedByTouser User?       @relation("product_ingredient_updatedByTouser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy], map: "product_ingredient_createdBy_fkey")
+  @@index([productId], map: "product_ingredient_productId_fkey")
+  @@index([rawMaterialId], map: "product_ingredient_rawMaterialId_fkey")
+  @@index([updatedBy], map: "product_ingredient_updatedBy_fkey")
+  @@map("product_ingredient")
+}
+
+model RawMaterial {
+  id                             String              @id
+  name                           String
+  unit                           String
+  stock                          Float               @default(0)
+  averagePrice                   Float               @default(0)
+  lastPurchaseQuantity           Float?
+  lastPurchaseTotal              Float?
+  reorderPoint                   Float               @default(0)
+  createdAt                      DateTime            @default(now())
+  createdBy                      String?
+  updatedAt                      DateTime
+  updatedBy                      String?
+  inventory_log                  InventoryLog[]
+  productIngredient              ProductIngredient[]
+  userRawMaterialCreatedByTouser User?               @relation("raw_material_createdByTouser", fields: [createdBy], references: [id])
+  userRawMaterialUpdatedByTouser User?               @relation("raw_material_updatedByTouser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy], map: "raw_material_createdBy_fkey")
+  @@index([updatedBy], map: "raw_material_updatedBy_fkey")
+  @@map("raw_material")
+}
+
+model Transaction {
+  id                             String            @id
+  date                           DateTime          @default(now())
+  type                           String
+  category                       String
+  totalAmount                    Float             @default(0)
+  paymentMethod                  String
+  notes                          String?
+  createdAt                      DateTime          @default(now())
+  createdBy                      String?
+  updatedAt                      DateTime
+  updatedBy                      String?
+  userTransactionCreatedByTouser User?             @relation("transaction_createdByTouser", fields: [createdBy], references: [id])
+  userTransactionUpdatedByTouser User?             @relation("transaction_updatedByTouser", fields: [updatedBy], references: [id])
+  transactionItems               TransactionItem[]
+
+  @@index([createdBy], map: "transaction_createdBy_fkey")
+  @@index([updatedBy], map: "transaction_updatedBy_fkey")
+  @@map("transaction")
+}
+
+model TransactionItem {
+  id                                 String      @id
+  transactionId                      String
+  productId                          String?
+  rawMaterialId                      String?
+  itemName                           String
+  quantity                           Float
+  unitPrice                          Float
+  subTotal                           Float
+  createdAt                          DateTime    @default(now())
+  createdBy                          String?
+  updatedAt                          DateTime
+  updatedBy                          String?
+  userTransactionItemCreatedByTouser User?       @relation("transaction_item_createdByTouser", fields: [createdBy], references: [id])
+  product                            Product?    @relation(fields: [productId], references: [id])
+  transaction                        Transaction @relation(fields: [transactionId], references: [id])
+  userTransactionItemUpdatedByTouser User?       @relation("transaction_item_updatedByTouser", fields: [updatedBy], references: [id])
+
+  @@index([createdBy], map: "transaction_item_createdBy_fkey")
+  @@index([productId], map: "transaction_item_productId_fkey")
+  @@index([transactionId], map: "transaction_item_transactionId_fkey")
+  @@index([updatedBy], map: "transaction_item_updatedBy_fkey")
+}
+
+model User {
+  id                               String              @id
+  name                             String
+  username                         String              @unique
+  password                         String
+  lastLoginAt                      DateTime?
+  inventoryLogCreatedByTouser      InventoryLog[]      @relation("inventory_log_createdByTouser")
+  inventoryLogUpdatedByTouser      InventoryLog[]      @relation("inventory_log_updatedByTouser")
+  productCreatedByTouser           Product[]           @relation("product_createdByTouser")
+  productUpdatedByTouser           Product[]           @relation("product_updatedByTouser")
+  productIngredientCreatedByTouser ProductIngredient[] @relation("product_ingredient_createdByTouser")
+  productIngredientUpdatedByTouser ProductIngredient[] @relation("product_ingredient_updatedByTouser")
+  rawMaterialCreatedByTouser       RawMaterial[]       @relation("raw_material_createdByTouser")
+  rawMaterialUpdatedByTouser       RawMaterial[]       @relation("raw_material_updatedByTouser")
+  transactionCreatedByTouser       Transaction[]       @relation("transaction_createdByTouser")
+  transactionUpdatedByTouser       Transaction[]       @relation("transaction_updatedByTouser")
+  transactionItemCreatedByTouser   TransactionItem[]   @relation("transaction_item_createdByTouser")
+  transactionItemUpdatedByTouser   TransactionItem[]   @relation("transaction_item_updatedByTouser")
+  productPriceLogCreatedByTouser   ProductPriceLog[]   @relation("product_price_log_createdByTouser")
+  productPriceLogUpdatedByTouser   ProductPriceLog[]   @relation("product_price_log_updatedByTouser")
+}
