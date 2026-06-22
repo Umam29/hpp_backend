@@ -1,13 +1,25 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Transaction } from '../generated/prisma/client';
 import {
   TransactionListResponseDto,
@@ -47,11 +59,32 @@ export class TransactionController {
     };
   }
 
+  @Get(':id')
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Ambil transaksi berdasarkan ID' })
+  @ApiParam({ name: 'id', description: 'ID transaksi' })
+  @ApiResponse({ status: 200, type: TransactionSingleResponseDto })
+  @ApiResponse({ status: 404, type: ApiErrorResponseDto })
+  async findOne(@Param('id') id: string): Promise<{
+    success: boolean;
+    message: string;
+    data: Transaction;
+  }> {
+    const data = await this.transactionService.findOne(id);
+
+    return {
+      success: true,
+      message: 'Transaction retrieved successfully',
+      data,
+    };
+  }
+
   @Post()
+  @UseGuards(AuthGuard)
   @ApiOperation({
     summary: 'Buat transaksi baru',
     description:
-      'EXPENSE + RAW_MATERIAL_PURCHASE: totalAmount dihitung server dari unitPrice × quantity tiap item. INCOME + SALE: totalAmount dari input user, unitPrice tiap item diisi otomatis dari sellingPrice produk. Pembelian bahan baku otomatis recalculate costPrice & sellingPrice produk terkait.',
+      'EXPENSE: subTotal per item wajib, unitPrice dihitung server. INCOME/SALE: tidak mengubah stok produk/bahan baku.',
   })
   @ApiResponse({ status: 201, type: TransactionSingleResponseDto })
   @ApiResponse({ status: 400, type: ApiErrorResponseDto })
@@ -68,6 +101,59 @@ export class TransactionController {
     return {
       success: true,
       message: 'Transaction created successfully',
+      data,
+    };
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Perbarui transaksi',
+    description:
+      'Revert stok bahan baku (EXPENSE) lalu apply ulang items baru. INCOME tidak memanipulasi stok.',
+  })
+  @ApiParam({ name: 'id', description: 'ID transaksi' })
+  @ApiResponse({ status: 200, type: TransactionSingleResponseDto })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto })
+  @ApiResponse({ status: 404, type: ApiErrorResponseDto })
+  async update(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Body() updateTransactionDto: UpdateTransactionDto,
+  ): Promise<{ success: boolean; message: string; data: Transaction }> {
+    const data = await this.transactionService.updateTransaction(
+      id,
+      updateTransactionDto,
+      userId,
+    );
+
+    return {
+      success: true,
+      message: 'Transaction updated successfully',
+      data,
+    };
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Hapus transaksi',
+    description:
+      'EXPENSE: kurangi stok bahan baku & hapus inventory log. INCOME: hapus data saja.',
+  })
+  @ApiParam({ name: 'id', description: 'ID transaksi' })
+  @ApiResponse({ status: 200, type: TransactionSingleResponseDto })
+  @ApiResponse({ status: 400, type: ApiErrorResponseDto })
+  @ApiResponse({ status: 404, type: ApiErrorResponseDto })
+  async remove(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<{ success: boolean; message: string; data: Transaction }> {
+    const data = await this.transactionService.deleteTransaction(id, userId);
+
+    return {
+      success: true,
+      message: 'Transaction deleted successfully',
       data,
     };
   }

@@ -1,12 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsString,
+  IsArray,
+  IsDateString,
+  IsIn,
   IsNumber,
   IsOptional,
-  IsArray,
+  IsString,
   ValidateNested,
-  IsIn,
 } from 'class-validator';
 import { TransactionItemDto } from './transaction-item.dto';
 
@@ -30,12 +31,21 @@ export class CreateTransactionDto {
   category: string;
 
   @ApiPropertyOptional({
-    example: 150000,
-    description:
-      'Total nominal transaksi. Untuk SALE wajib diisi sesuai nominal yang dibayar pelanggan. Untuk RAW_MATERIAL_PURCHASE dihitung server dari items.',
+    example: '2026-06-15T08:00:00.000Z',
+    description: 'Tanggal transaksi (ISO 8601). Default: sekarang.',
   })
   @IsOptional()
-  @IsNumber()
+  @IsDateString()
+  date?: string;
+
+  @ApiPropertyOptional({
+    example: 150000,
+    description:
+      'Total nominal transaksi. Untuk SALE opsional (default jumlah subTotal item). Untuk PURCHASE dihitung server dari subTotal items.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ allowNaN: false, maxDecimalPlaces: 4 })
   totalAmount?: number;
 
   @ApiProperty({ example: 'CASH', description: 'Metode pembayaran' })

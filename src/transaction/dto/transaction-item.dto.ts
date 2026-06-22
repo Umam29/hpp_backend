@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class TransactionItemDto {
   @ApiPropertyOptional({
@@ -12,26 +13,44 @@ export class TransactionItemDto {
 
   @ApiPropertyOptional({
     example: '550e8400-e29b-41d4-a716-446655440020',
-    description: 'ID bahan baku (wajib untuk transaksi RAW_MATERIAL_PURCHASE)',
+    description: 'ID bahan baku (wajib untuk PURCHASE jika tidak membuat bahan baru)',
   })
   @IsOptional()
   @IsString()
   rawMaterialId?: string;
+
+  @ApiPropertyOptional({
+    example: 'Gula Pasir',
+    description: 'Nama bahan baku baru (wajib jika rawMaterialId kosong pada PURCHASE)',
+  })
+  @IsOptional()
+  @IsString()
+  newRawMaterialName?: string;
+
+  @ApiPropertyOptional({
+    example: 'kg',
+    description: 'Satuan bahan baku baru (wajib jika newRawMaterialName diisi)',
+  })
+  @IsOptional()
+  @IsString()
+  newRawMaterialUnit?: string;
 
   @ApiProperty({ example: 'Gula Pasir', description: 'Nama item' })
   @IsString()
   itemName: string;
 
   @ApiProperty({ example: 10, description: 'Jumlah/kuantitas' })
-  @IsNumber()
+  @Type(() => Number)
+  @IsNumber({ allowNaN: false, maxDecimalPlaces: 4 })
   quantity: number;
 
-  @ApiPropertyOptional({
-    example: 15000,
+  @ApiProperty({
+    example: 150000,
     description:
-      'Harga per satuan. Wajib untuk RAW_MATERIAL_PURCHASE. Untuk SALE diabaikan — diambil otomatis dari sellingPrice produk.',
+      'Subtotal item. Wajib untuk RAW_MATERIAL_PURCHASE. Untuk SALE dihitung server dari sellingPrice × quantity.',
   })
   @IsOptional()
-  @IsNumber()
-  unitPrice?: number;
+  @Type(() => Number)
+  @IsNumber({ allowNaN: false, maxDecimalPlaces: 4 })
+  subTotal?: number;
 }
