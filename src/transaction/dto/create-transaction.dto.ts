@@ -31,8 +31,8 @@ export class CreateTransactionDto {
   category: string;
 
   @ApiPropertyOptional({
-    example: '2026-06-15T08:00:00.000Z',
-    description: 'Tanggal transaksi (ISO 8601). Default: sekarang.',
+    example: '2026-06-15T08:00:00+07:00',
+    description: 'Tanggal transaksi (ISO 8601, timezone Jakarta +07:00). Default: sekarang.',
   })
   @IsOptional()
   @IsDateString()

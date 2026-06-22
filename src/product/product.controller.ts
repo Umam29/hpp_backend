@@ -40,7 +40,6 @@ import { ApiErrorResponseDto } from '../common/dto/api-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { AuthGuard } from '../common/guards/auth.guard';
-import { serializeDatesToJakarta } from '../common/helpers/serialize-jakarta-datetime';
 import { MultipartNestedBodyInterceptor } from '../common/interceptors/multipart-nested-body.interceptor';
 import {
   productImageFileFilter,
@@ -113,7 +112,7 @@ export class ProductController {
     return {
       success: true,
       message: 'Products retrieved successfully',
-      data: serializeDatesToJakarta(data),
+      data,
       meta,
     };
   }
@@ -135,7 +134,7 @@ export class ProductController {
     return {
       success: true,
       message: 'Product price logs retrieved successfully',
-      data: serializeDatesToJakarta(data),
+      data,
     };
   }
 
@@ -154,7 +153,7 @@ export class ProductController {
     return {
       success: true,
       message: 'Product retrieved successfully',
-      data: serializeDatesToJakarta(data),
+      data,
     };
   }
 

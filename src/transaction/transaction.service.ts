@@ -13,6 +13,7 @@ import { ProductPricingService } from '../product/product-pricing.service';
 import { roundPrice } from '../product/helpers/product-pricing.helper';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { nowJakarta, parseJakartaDate } from '../common/helpers/jakarta-datetime';
 
 interface ResolvedTransactionItem {
   productId?: string | null;
@@ -76,8 +77,8 @@ export class TransactionService {
     userId: string,
   ): Promise<Transaction> {
     return this.prismaService.$transaction(async (tx) => {
-      const now = new Date();
-      const transactionDate = dto.date ? new Date(dto.date) : now;
+      const now = nowJakarta();
+      const transactionDate = dto.date ? parseJakartaDate(dto.date) : now;
       const transactionId = randomUUID();
 
       const resolvedItems = await this.resolveItems(dto, tx, userId);
@@ -162,7 +163,6 @@ export class TransactionService {
       const createDto: CreateTransactionDto = {
         type: existing.type,
         category: existing.category,
-        date: dto.date ?? existing.date.toISOString(),
         paymentMethod: dto.paymentMethod ?? existing.paymentMethod,
         notes: dto.notes ?? existing.notes ?? undefined,
         totalAmount: dto.totalAmount ?? existing.totalAmount,
@@ -175,12 +175,12 @@ export class TransactionService {
 
       const resolvedItems = await this.resolveItems(createDto, tx, userId);
       const totalAmount = this.calculateTotalAmount(createDto, resolvedItems);
-      const now = new Date();
+      const now = nowJakarta();
 
       await tx.transaction.update({
         where: { id },
         data: {
-          date: createDto.date ? new Date(createDto.date) : existing.date,
+          date: dto.date ? parseJakartaDate(dto.date) : existing.date,
           totalAmount,
           paymentMethod: createDto.paymentMethod,
           notes: createDto.notes,
@@ -418,7 +418,7 @@ export class TransactionService {
     userId: string,
   ): Promise<string> {
     const rawMaterialId = randomUUID();
-    const now = new Date();
+    const now = nowJakarta();
 
     await tx.rawMaterial.create({
       data: {
@@ -445,7 +445,7 @@ export class TransactionService {
     userId: string,
   ): Promise<string[]> {
     const rawMaterialIds: string[] = [];
-    const now = new Date();
+    const now = nowJakarta();
 
     for (const item of items) {
       if (!item.rawMaterialId) {
@@ -513,7 +513,7 @@ export class TransactionService {
     },
     userId: string,
   ): Promise<void> {
-    const now = new Date();
+    const now = nowJakarta();
 
     for (const item of transaction.transactionItems) {
       if (!item.rawMaterialId) {

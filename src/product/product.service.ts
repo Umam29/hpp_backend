@@ -14,6 +14,7 @@ import { ProductPricingService } from './product-pricing.service';
 import { PRODUCT_PRICE_LOG_REASON } from './helpers/product-pricing.helper';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { nowJakarta } from '../common/helpers/jakarta-datetime';
 
 @Injectable()
 export class ProductService {
@@ -80,7 +81,7 @@ export class ProductService {
     await this.prismaService.$transaction(async (tx) => {
       await this.validateIngredientRawMaterials(tx, dto.ingredients);
 
-      const now = new Date();
+      const now = nowJakarta();
 
       await tx.product.create({
         data: {
@@ -151,7 +152,7 @@ export class ProductService {
         marginPercent: dto.marginPercent,
         fixedMargin: dto.fixedMargin,
         updatedBy: userId,
-        updatedAt: new Date(),
+        updatedAt: nowJakarta(),
       };
 
       if (imagePath) {
@@ -170,8 +171,8 @@ export class ProductService {
               quantity: ingredient.quantity,
               createdBy: userId,
               updatedBy: userId,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: nowJakarta(),
+              updatedAt: nowJakarta(),
             })),
           };
         }

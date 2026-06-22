@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { nowJakarta } from '../common/helpers/jakarta-datetime';
 
 @Injectable()
 export class UserService {
@@ -25,7 +26,7 @@ export class UserService {
 
     const updatedUser = await this.prismaService.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: { lastLoginAt: nowJakarta() },
     });
 
     return {

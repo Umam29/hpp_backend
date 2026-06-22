@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RawMaterial } from '../generated/prisma/client';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { nowJakarta } from '../common/helpers/jakarta-datetime';
 import { InputRawMaterialDto } from './dto/input-raw-material.dto';
 
 @Injectable()
@@ -58,7 +59,7 @@ export class RawMaterialService {
 
     return this.prismaService.$transaction(async (tx) => {
       const rawMaterialId = randomUUID();
-      const now = new Date();
+      const now = nowJakarta();
       const averagePrice =
         dto.lastPurchaseTotal && dto.lastPurchaseQuantity
           ? dto.lastPurchaseTotal / dto.lastPurchaseQuantity
@@ -125,7 +126,7 @@ export class RawMaterialService {
         lastPurchaseTotal: dto.lastPurchaseTotal,
         reorderPoint: dto.reorderPoint,
         updatedBy: userId,
-        updatedAt: new Date(),
+        updatedAt: nowJakarta(),
       },
     });
   }

@@ -6,6 +6,7 @@ import {
   PRODUCT_PRICE_LOG_REASON,
   ProductPriceLogReason,
 } from './helpers/product-pricing.helper';
+import { nowJakarta } from '../common/helpers/jakarta-datetime';
 
 type TransactionClient = Prisma.TransactionClient;
 
@@ -44,7 +45,7 @@ export class ProductPricingService {
       product.fixedMargin,
     );
 
-    const now = new Date();
+    const now = nowJakarta();
 
     await tx.product.update({
       where: { id: productId },
@@ -103,7 +104,7 @@ export class ProductPricingService {
     reason: ProductPriceLogReason,
     userId: string,
     referenceId?: string | null,
-    timestamp: Date = new Date(),
+    timestamp: Date = nowJakarta(),
   ): Promise<void> {
     await tx.productPriceLog.create({
       data: {
