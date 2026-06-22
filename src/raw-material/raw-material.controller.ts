@@ -28,6 +28,7 @@ import { ApiErrorResponseDto } from '../common/dto/api-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { serializeDatesToJakarta } from '../common/helpers/serialize-jakarta-datetime';
 
 @ApiTags('Raw Material')
 @ApiBearerAuth('access-token')
@@ -70,7 +71,7 @@ export class RawMaterialController {
     return {
       success: true,
       message: 'RawMaterials retrieved successfully',
-      data,
+      data: serializeDatesToJakarta(data),
       meta,
     };
   }
@@ -90,7 +91,7 @@ export class RawMaterialController {
     return {
       success: true,
       message: 'RawMaterial retrieved successfully',
-      data,
+      data: serializeDatesToJakarta(data),
     };
   }
 

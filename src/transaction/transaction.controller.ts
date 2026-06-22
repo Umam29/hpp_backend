@@ -29,6 +29,7 @@ import { ApiErrorResponseDto } from '../common/dto/api-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { serializeDatesToJakarta } from '../common/helpers/serialize-jakarta-datetime';
 
 @ApiTags('Transaction')
 @ApiBearerAuth('access-token')
@@ -54,7 +55,7 @@ export class TransactionController {
     return {
       success: true,
       message: 'Transactions retrieved successfully',
-      data,
+      data: serializeDatesToJakarta(data),
       meta,
     };
   }
@@ -75,7 +76,7 @@ export class TransactionController {
     return {
       success: true,
       message: 'Transaction retrieved successfully',
-      data,
+      data: serializeDatesToJakarta(data),
     };
   }
 
