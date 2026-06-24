@@ -169,10 +169,20 @@ export class RawMaterialService {
       throw new BadRequestException('Raw material is used in products');
     }
 
-    await deleteRawMaterialImageFile(existing.image);
+    return this.prismaService.$transaction(async (tx) => {
+      await tx.inventoryLog.deleteMany({
+        where: {
+          rawMaterialId: id,
+        },
+      });
 
-    return this.prismaService.rawMaterial.delete({
-      where: { id },
+      if (existing.image) {
+        await deleteRawMaterialImageFile(existing.image);
+      }
+
+      return await tx.rawMaterial.delete({
+        where: { id },
+      });
     });
   }
 }
