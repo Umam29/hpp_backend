@@ -11,6 +11,12 @@ export class RawMaterialResponseDto {
   @ApiProperty({ example: 'kg' })
   unit: string;
 
+  @ApiPropertyOptional({
+    example: '/uploads/raw-materials/abc.jpg',
+    description: 'Path gambar bahan baku',
+  })
+  image?: string | null;
+
   @ApiProperty({ example: 100 })
   stock: number;
 

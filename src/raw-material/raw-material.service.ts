@@ -10,6 +10,7 @@ import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { nowJakarta } from '../common/helpers/jakarta-datetime';
 import { InputRawMaterialDto } from './dto/input-raw-material.dto';
+import { deleteRawMaterialImageFile } from './config/raw-material-upload.config';
 
 @Injectable()
 export class RawMaterialService {
@@ -54,7 +55,11 @@ export class RawMaterialService {
     return rawMaterial;
   }
 
-  async create(dto: InputRawMaterialDto, userId: string): Promise<RawMaterial> {
+  async create(
+    dto: InputRawMaterialDto,
+    userId: string,
+    imagePath?: string,
+  ): Promise<RawMaterial> {
     const stock = dto.stock ?? 0;
 
     return this.prismaService.$transaction(async (tx) => {
@@ -70,6 +75,7 @@ export class RawMaterialService {
           id: rawMaterialId,
           name: dto.name,
           unit: dto.unit,
+          image: imagePath,
           stock,
           averagePrice,
           lastPurchaseQuantity: dto.lastPurchaseQuantity,
@@ -107,6 +113,7 @@ export class RawMaterialService {
     id: string,
     dto: InputRawMaterialDto,
     userId: string,
+    imagePath?: string,
   ): Promise<RawMaterial> {
     const existing = await this.findOne(id);
 
@@ -115,7 +122,7 @@ export class RawMaterialService {
         ? dto.lastPurchaseTotal / dto.lastPurchaseQuantity
         : existing.averagePrice;
 
-    return this.prismaService.rawMaterial.update({
+    const updated = await this.prismaService.rawMaterial.update({
       where: { id },
       data: {
         name: dto.name,
@@ -125,18 +132,26 @@ export class RawMaterialService {
         lastPurchaseQuantity: dto.lastPurchaseQuantity,
         lastPurchaseTotal: dto.lastPurchaseTotal,
         reorderPoint: dto.reorderPoint,
+        ...(imagePath ? { image: imagePath } : {}),
         updatedBy: userId,
         updatedAt: nowJakarta(),
       },
     });
+
+    if (imagePath && existing.image) {
+      await deleteRawMaterialImageFile(existing.image);
+    }
+
+    return updated;
   }
 
   async remove(id: string, userId: string): Promise<RawMaterial> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
 
     const inventoryLogs = await this.prismaService.inventoryLog.findMany({
       where: {
         rawMaterialId: id,
+        type: { not: 'IN_INITIAL' },
       },
     });
 
@@ -153,6 +168,8 @@ export class RawMaterialService {
     if (ingredients.length > 0) {
       throw new BadRequestException('Raw material is used in products');
     }
+
+    await deleteRawMaterialImageFile(existing.image);
 
     return this.prismaService.rawMaterial.delete({
       where: { id },

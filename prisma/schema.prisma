@@ -100,6 +100,7 @@ model RawMaterial {
   id                             String              @id
   name                           String
   unit                           String
+  image                          String?
   stock                          Float               @default(0)
   averagePrice                   Float               @default(0)
   lastPurchaseQuantity           Float?
